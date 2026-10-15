@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nur Traders Ledger</title>
+<!--
+  NUR TRADERS LEDGER — GitHub Pages edition
+  Upload this single file (index.html) to your GitHub repo.
+  Repo Settings -> Pages -> Deploy from branch (main, root).
+  First time you open the site: paste your Apps Script /exec URL
+  (or hardcode it below in API_URL to skip the setup screen).
+-->
+<style>
+:root{--p:#0b7a3e;--pd:#095c2f;--bg:#f2f6f3;--card:#ffffff;--ink:#1d2b22;--muted:#6b7d70;--red:#c0392b;--line:#dfe8e1;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Hind Siliguri","Noto Sans Bengali",system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+header{background:var(--p);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+header .brand{font-size:19px;font-weight:700;}
+header button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff;padding:6px 12px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;}
+nav{display:flex;background:var(--pd);flex-wrap:wrap;}
+nav button{flex:1 0 auto;background:none;border:none;color:#cfe7d8;padding:10px 8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border-bottom:3px solid transparent;min-width:72px;}
+nav button.active{color:#fff;border-bottom-color:#ffd54f;background:rgba(255,255,255,.08);}
+main{max-width:860px;margin:0 auto;padding:14px;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+.card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.card .lbl{font-size:13px;color:var(--muted);}
+.card .val{font-size:22px;font-weight:700;margin-top:2px;word-break:break-word;}
+.panel{background:var(--card);border-radius:12px;padding:14px;margin-top:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.panel h3{font-size:15px;margin-bottom:10px;color:var(--pd);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line);}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+td.num,th.num{text-align:right;white-space:nowrap;}
+.red{color:var(--red);} .green{color:var(--p);} .muted{color:var(--muted);}
+.rowbtn{background:none;border:none;color:var(--p);font-weight:600;cursor:pointer;font-size:14px;padding:4px;font-family:inherit;}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:#fff;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--p);}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px;}
+.btn{background:var(--p);color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn:active{background:var(--pd);}
+.btn.sec{background:#e8f0ea;color:var(--pd);}
+.btn.danger{background:#fdecea;color:var(--red);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.searchbar{display:flex;gap:8px;margin-bottom:12px;}
+.searchbar input{flex:1;}
+.searchbar .btn{white-space:nowrap;}
+.custrow{background:var(--card);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.07);cursor:pointer;}
+.custrow .nm{font-weight:600;}
+.custrow .ph{font-size:13px;color:var(--muted);}
+.badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:#fdecea;color:var(--red);margin-left:6px;}
+#modalWrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;padding:14px;overflow:auto;}
+#modalWrap.open{display:block;}
+#modal{background:#fff;border-radius:14px;max-width:520px;margin:20px auto;padding:18px;box-shadow:0 8px 30px rgba(0,0,0,.25);}
+#modal h2{font-size:17px;margin-bottom:6px;color:var(--pd);}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d2b22;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:99;box-shadow:0 4px 12px rgba(0,0,0,.3);}
+.receipt{border:1px dashed #999;border-radius:8px;padding:14px;max-width:340px;margin:0 auto;}
+.receipt h2{text-align:center;color:var(--pd);}
+.receipt .meta{text-align:center;font-size:12px;color:var(--muted);margin-bottom:10px;}
+.receipt .line{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;border-bottom:1px dotted #ddd;}
+.receipt .total{font-weight:700;font-size:17px;}
+.receipt .thanks{text-align:center;font-size:12px;color:var(--muted);margin-top:12px;}
+#printArea{display:none;}
+@media print{
+ body *{visibility:hidden;}
+ #printArea{display:block !important;visibility:visible;position:absolute;left:0;top:0;width:100%;}
+ #printArea *{visibility:visible;}
+}
+.kv{font-size:14px;margin:2px 0;}
+.kv b{display:inline-block;min-width:110px;color:var(--muted);font-weight:600;}
+</style>
+</head>
+<body>
+<div id="printArea"></div>
+<header>
+  <div class="brand" id="brand">Nur Traders</div>
+  <div>
+    <button onclick="toggleLang()" id="langBtn">বাংলা</button>
+    <button onclick="loadData()" title="Refresh">&#8635;</button>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main id="view"><div class="muted">Loading…</div></main>
+<div id="modalWrap" onclick="if(event.target===this)closeModal()"><div id="modal"></div></div>
+<script>
+/* ============ CONFIG ============ */
+var API_URL = ""; // optional: paste your Apps Script /exec URL here to skip the setup screen on every device
+
+/* ============ STATE ============ */
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+var state = { data: null, view: "dashboard", selCust: null, search: "", lang: lsGet("ntl-lang") || "en" };
+window.onerror = function(msg){
+  try {
+    var v0 = document.getElementById("view");
+    if (v0 && !state.data && state.view !== "setup") v0.innerHTML = "<div class=\"panel red\"><b>⚠ " + t("scriptError") + "</b><div>" + esc(String(msg)) + "</div></div>";
+  } catch(e2){}
+  return false;
+};
+
+/* ============ I18N ============ */
+var L = {
+ en: {
+  loading:"Loading…", dashboard:"Dashboard", customers:"Customers", newEntry:"New Entry",
+  reports:"Reports", settings:"Settings", addCustomer:"+ New Customer", editCustomer:"Edit Customer",
+  name:"Name", phone:"Phone", address:"Address", openingBalance:"Opening Balance", note:"Note",
+  due:"Due (বাকি)", payment:"Payment (জমা)", balance:"Balance", totalDue:"Total Due (receivable)",
+  advance:"Advance (you owe)", monthReceived:"Received this month", customersCount:"Customers",
+  overdue:"Overdue alerts", topDebtors:"Top debtors", recentTx:"Recent transactions", search:"Search",
+  save:"Save", cancel:"Cancel", del:"Delete", edit:"Edit", back:"← Back", ledger:"Ledger (হিসাব)",
+  date:"Date", type:"Type", amount:"Amount", running:"Balance", addDue:"Add Due", addPayment:"Add Payment",
+  statement:"Statement", receipt:"Receipt", print:"Print", close:"Close", noData:"No data yet",
+  saved:"Saved ✓", deleted:"Deleted", confirmTx:"Delete this entry?", confirmCust:"Delete this customer?",
+  selectCustomer:"Select customer", entrySaved:"Entry saved ✓ Print receipt?", businessName:"Business name",
+  businessPhone:"Business phone", businessAddress:"Business address", alertDays:"Overdue alert (days)",
+  language:"Default language (new devices)", settingsSaved:"Settings saved ✓",
+  monthSummary:"Monthly summary", duesTotal:"Total dues", paymentsTotal:"Total payments",
+  net:"Net increase in dues", customerMonthly:"Customers this month", allTime:"All-time totals",
+  reportMonth:"Month", allCustomers:"All-time dues by customer", grandTotal:"Grand total",
+  custHasTx:"has transactions — delete its entries first", balanceAfter:"Balance after",
+  thanks:"Thank you! ধন্যবাদ!", statementOf:"Statement of", openingBal:"Opening balance",
+  closingBal:"Closing balance", helpTitle:"How to use", noResults:"No results",
+  overdueDays:"days overdue", view:"View",
+  retry:"Retry", loadError:"Could not load data from Google Sheets",
+  stillLoading:"No response from Google Sheets", scriptError:"Script error",
+  checkDeploy:"Check the API deployment: Apps Script → Deploy → Manage deployments → pencil ✏ → Version: New version → Deploy. Settings must be: Execute as Me, Anyone.",
+  connect:"Connect to Google Sheets", apiUrl:"Apps Script Web App URL",
+  apiUrlHint:"Paste the URL that ends with /exec", testSave:"Test & Save",
+  connected:"Connected ✓", connection:"Google Sheets connection", status:"Status",
+  notConnected:"Not connected", changeConnection:"Change connection", noApiUrl:"API URL is not set"
+ },
+ bn: {
+  loading:"লোড হচ্ছে…", dashboard:"ড্যাশবোর্ড", customers:"কাস্টমার", newEntry:"নতুন এন্ট্রি",
+  reports:"রিপোর্ট", settings:"সেটিংস", addCustomer:"+ নতুন কাস্টমার", editCustomer:"কাস্টমার এডিট",
+  name:"নাম", phone:"ফোন", address:"ঠিকানা", openingBalance:"প্রারম্ভিক ব্যালেন্স", note:"নোট",
+  due:"বাকি (Due)", payment:"জমা (Payment)", balance:"ব্যালেন্স", totalDue:"মোট বাকি (পাওনা)",
+  advance:"অগ্রিম (আমার দেনা)", monthReceived:"এই মাসে জমা", customersCount:"কাস্টমার",
+  overdue:"বকেয়া সতর্কতা", topDebtors:"সর্বোচ্চ বাকিদার", recentTx:"সাম্প্রতিক এন্ট্রি", search:"খুঁজুন",
+  save:"সেভ", cancel:"বাতিল", del:"ডিলিট", edit:"এডিট", back:"← ফিরে যান", ledger:"হিসাব",
+  date:"তারিখ", type:"ধরন", amount:"টাকা", running:"ব্যালেন্স", addDue:"বাকি যোগ", addPayment:"জমা যোগ",
+  statement:"স্টেটমেন্ট", receipt:"রসিদ", print:"প্রিন্ট", close:"বন্ধ", noData:"এখনো কোনো তথ্য নেই",
+  saved:"সেভ হয়েছে ✓", deleted:"ডিলিট হয়েছে", confirmTx:"এই এন্ট্রি ডিলিট করবেন?",
+  confirmCust:"এই কাস্টমার ডিলিট করবেন?", selectCustomer:"কাস্টমার সিলেক্ট করুন",
+  entrySaved:"এন্ট্রি সেভ হয়েছে ✓ রসিদ প্রিন্ট করবেন?", businessName:"ব্যবসার নাম",
+  businessPhone:"ব্যবসার ফোন", businessAddress:"ব্যবসার ঠিকানা", alertDays:"বকেয়া সতর্কতা (দিন)",
+  language:"ডিফল্ট ভাষা (নতুন ডিভাইসে)", settingsSaved:"সেটিংস সেভ হয়েছে ✓",
+  monthSummary:"মাসিক সারসংক্ষেপ", duesTotal:"মোট বাকি", paymentsTotal:"মোট জমা",
+  net:"বাকির নিট বৃদ্ধি", customerMonthly:"এই মাসের কাস্টমার", allTime:"সর্বমোট",
+  reportMonth:"মাস", allCustomers:"সর্বকালীন বাকি (কাস্টমার অনুযায়ী)", grandTotal:"মোট",
+  custHasTx:"এর এন্ট্রি আছে — আগে সেগুলো ডিলিট করুন", balanceAfter:"পরের ব্যালেন্স",
+  thanks:"ধন্যবাদ!", statementOf:"স্টেটমেন্ট", openingBal:"প্রারম্ভিক ব্যালেন্স",
+  closingBal:"শেষ ব্যালেন্স", helpTitle:"কীভাবে ব্যবহার করবেন", noResults:"কিছু পাওয়া যায়নি",
+  overdueDays:"দিন পার হয়েছে", view:"দেখুন",
+  retry:"আবার চেষ্টা", loadError:"Google Sheets থেকে ডেটা লোড করা যায়নি",
+  stillLoading:"Google Sheets থেকে সাড়া আসছে না", scriptError:"স্ক্রিপ্ট এরর",
+  checkDeploy:"API ডিপ্লয়মেন্ট চেক করুন: Apps Script → Deploy → Manage deployments → পেন্সিল ✏ → Version: New version → Deploy. সেটিংস: Execute as Me, Anyone.",
+  connect:"Google Sheets-এ কানেক্ট করুন", apiUrl:"Apps Script Web App URL",
+  apiUrlHint:"যে URL-এর শেষে /exec আছে সেটি পেস্ট করুন", testSave:"টেস্ট ও সেভ",
+  connected:"কানেক্টেড ✓", connection:"Google Sheets কানেকশন", status:"স্ট্যাটাস",
+  notConnected:"কানেক্টেড নয়", changeConnection:"কানেকশন বদলান", noApiUrl:"API URL সেট করা হয়নি"
+ }
+};
+function t(k){ var d = L[state.lang] || L.en; return d[k] || L.en[k] || k; }
+function toggleLang(){
+  state.lang = state.lang === "en" ? "bn" : "en";
+  lsSet("ntl-lang", state.lang);
+  render();
+}
+
+/* ============ API CONNECTOR ============ */
+function getApiUrl(){
+  if (API_URL && API_URL.indexOf("http") === 0) return API_URL;
+  return lsGet("ntl-api") || "";
+}
+function api(action, payload){
+  var url = getApiUrl();
+  if (!url) return Promise.reject(new Error(t("noApiUrl")));
+  var opts = null;
+  var full = url;
+  if (payload !== undefined && payload !== null) {
+    opts = { method: "POST", body: JSON.stringify({ action: action, payload: payload }) };
+  } else {
+    full = url + (url.indexOf("?") >= 0 ? "&" : "?") + "action=" + action;
+  }
+  return fetch(full, opts).then(function(r){ return r.json(); }).then(function(res){
+    if (!res || res.ok !== true) throw new Error(res && res.error ? res.error : "API error");
+    return res.data;
+  });
+}
+
+/* ============ HELPERS ============ */
+function esc(s){ return String(s === null || s === undefined ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function fmt(n){ n = Number(n) || 0; return "\u09F3" + n.toLocaleString("en-IN", {minimumFractionDigits:0, maximumFractionDigits:2}); }
+function today(){ var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function thisMonth(){ return today().slice(0,7); }
+function daysAgo(dstr){ var d = new Date(dstr + "T00:00:00"); if (isNaN(d)) return -1; return Math.floor((Date.now() - d.getTime())/86400000); }
+function toast(msg){
+  var el = document.createElement("div");
+  el.className = "toast"; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2600);
+}
+function custById(id){ return (state.data.customers.filter(function(c){ return c.id === String(id); })[0]) || null; }
+function txFor(cid){ return state.data.transactions.filter(function(x){ return x.custId === String(cid); }); }
+function balanceOf(cid){
+  var c = custById(cid); if (!c) return 0;
+  var b = Number(c.opening) || 0;
+  txFor(cid).forEach(function(x){ b += (x.type === "Due" ? 1 : -1) * Number(x.amount); });
+  return b;
+}
+function txSorted(cid){
+  var arr = (cid ? txFor(cid) : state.data.transactions.slice()).slice();
+  arr.sort(function(a,b){ return a.date === b.date ? (a.id < b.id ? -1 : 1) : (a.date < b.date ? -1 : 1); });
+  return arr;
+}
+function oldestDueDate(cid){
+  var dues = txFor(cid).filter(function(x){ return x.type === "Due"; });
+  if (!dues.length) return null;
+  dues.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  return dues[0].date;
+}
+function alertDays(){ return Number(state.data.settings.alertDays) || 30; }
+function overdueInfo(c){
+  var bal = balanceOf(c.id);
+  if (bal <= 0) return null;
+  var od = oldestDueDate(c.id);
+  if (!od) return null;
+  var days = daysAgo(od);
+  if (days < 0 || days <= alertDays()) return null;
+  return { bal: bal, days: days };
+}
+function settings(){ return (state.data && state.data.settings) || {}; }
+
+/* ============ LOAD & RENDER ============ */
+function loadData(){
+  if (!getApiUrl()) { state.view = "setup"; render(); return; }
+  var v = document.getElementById("view");
+  v.innerHTML = "<div class=\"muted\">" + t("loading") + "</div>";
+  var done = false;
+  var timer = setTimeout(function(){
+    if (!done) v.innerHTML = "<div class=\"panel red\"><b>⚠ " + t("stillLoading") + "</b><p class=\"muted\" style=\"margin-top:6px\">" + t("checkDeploy") + "</p><div class=\"btnrow\"><button class=\"btn\" onclick=\"loadData()\">🔄 " + t("retry") + "</button></div></div>";
+  }, 12000);
+  return api("init").then(function(d){
+    done = true; clearTimeout(timer);
+    state.data = d;
+    if (!lsGet("ntl-lang") && settings().language === "bn") state.lang = "bn";
+    render();
+  }).catch(function(e){
+    done = true; clearTimeout(timer);
+    v.innerHTML = "<div class=\"panel red\"><b>⚠ " + t("loadError") + "</b><p style=\"margin-top:6px\">" + esc(e.message) + "</p><div class=\"btnrow\"><button class=\"btn\" onclick=\"loadData()\">🔄 " + t("retry") + "</button><button class=\"btn sec\" onclick=\"state.view='setup';render()\">" + t("changeConnection") + "</button></div></div>";
+  });
+}
+
+function render(){
+  document.getElementById("brand").textContent = settings().businessName || "Nur Traders";
+  document.getElementById("langBtn").textContent = state.lang === "en" ? "বাংলা" : "English";
+  var navEl = document.getElementById("nav");
+  if (state.view === "setup") { navEl.innerHTML = ""; }
+  else {
+    var items = [["dashboard","dashboard"],["customers","customers"],["entry","newEntry"],["reports","reports"],["settings","settings"]];
+    navEl.innerHTML = items.map(function(it){
+      return "<button class=\"" + (state.view === it[0] ? "active" : "") + "\" onclick=\"go('" + it[0] + "')\">" + t(it[1]) + "</button>";
+    }).join("");
+  }
+  var v = document.getElementById("view");
+  if (state.view === "setup") v.innerHTML = viewSetup();
+  else if (state.view === "dashboard") v.innerHTML = viewDashboard();
+  else if (state.view === "customers") v.innerHTML = viewCustomers();
+  else if (state.view === "detail") v.innerHTML = viewDetail();
+  else if (state.view === "entry") v.innerHTML = viewEntry();
+  else if (state.view === "reports") { v.innerHTML = viewReports(); renderReportsMonth(); }
+  else if (state.view === "settings") v.innerHTML = viewSettings();
+}
+function go(v){ state.view = v; window.scrollTo(0,0); render(); }
+
+/* ============ VIEWS ============ */
+
+function viewSetup(){
+  return "<div class=\"panel\" style=\"max-width:560px;margin:24px auto 0\"><h3>" + t("connect") + "</h3>"
+    + "<p class=\"muted\" style=\"margin:6px 0 4px\">" + t("apiUrlHint") + "</p>"
+    + "<label>" + t("apiUrl") + "</label><input id=\"apiInput\" placeholder=\"https://script.google.com/macros/s/…/exec\">"
+    + "<div class=\"btnrow\"><button class=\"btn\" onclick=\"testAndSave()\">" + t("testSave") + "</button></div>"
+    + "<div id=\"setupMsg\" style=\"margin-top:8px\"></div></div>";
+}
+function testAndSave(){
+  var u = document.getElementById("apiInput").value.trim();
+  var msg = document.getElementById("setupMsg");
+  if (!u) { msg.innerHTML = "<p class=\"red\">" + t("apiUrlHint") + "</p>"; return; }
+  msg.innerHTML = "<p class=\"muted\">" + t("loading") + "</p>";
+  fetch(u + (u.indexOf("?") >= 0 ? "&" : "?") + "action=ping")
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res || res.ok !== true) throw new Error(res && res.error ? res.error : "Ping failed");
+      lsSet("ntl-api", u);
+      toast(t("connected"));
+      state.view = "dashboard";
+      loadData();
+    })
+    .catch(function(e){
+      msg.innerHTML = "<p class=\"red\">⚠ " + esc(e.message) + "</p><p class=\"muted\" style=\"font-size:12px;margin-top:4px\">" + t("checkDeploy") + "</p>";
+    });
+}
+
+function viewDashboard(){
+  var cs = state.data.customers, txs = state.data.transactions;
+  var totalDue = 0, advance = 0, overdueList = [], debtors = [];
+  cs.forEach(function(c){
+    var b = balanceOf(c.id);
+    if (b > 0) { totalDue += b; debtors.push({c:c, bal:b}); }
+    else if (b < 0) advance += Math.abs(b);
+    var ov = overdueInfo(c);
+    if (ov) overdueList.push({c:c, ov:ov});
+  });
+  var m = thisMonth();
+  var monthPay = txs.filter(function(x){ return x.type === "Payment" && x.date.slice(0,7) === m; })
+    .reduce(function(s,x){ return s + Number(x.amount); }, 0);
+  debtors.sort(function(a,b){ return b.bal - a.bal; });
+  var recent = txs.slice().sort(function(a,b){ return a.created < b.created ? 1 : -1; }).slice(0,8);
+
+  var h = "<div class=\"cards\">"
+    + card(t("totalDue"), fmt(totalDue), "red")
+    + card(t("advance"), fmt(advance), "")
+    + card(t("monthReceived"), fmt(monthPay), "green")
+    + card(t("customersCount"), cs.length, "")
+    + "</div>";
+
+  if (overdueList.length) {
+    h += "<div class=\"panel\"><h3>" + t("overdue") + "</h3>";
+    overdueList.sort(function(a,b){ return b.ov.days - a.ov.days; }).forEach(function(o){
+      h += "<div class=\"custrow\" onclick=\"openDetail('" + o.c.id + "')\"><div><div class=\"nm\">" + esc(o.c.name)
+        + " <span class=\"badge\">" + o.ov.days + " " + t("overdueDays") + "</span></div><div class=\"ph\">" + esc(o.c.phone) + "</div></div>"
+        + "<div class=\"red\" style=\"font-weight:700\">" + fmt(o.ov.bal) + "</div></div>";
+    });
+    h += "</div>";
+  }
+
+  if (debtors.length) {
+    h += "<div class=\"panel\"><h3>" + t("topDebtors") + "</h3><table>";
+    debtors.slice(0,5).forEach(function(d){
+      h += "<tr onclick=\"openDetail('" + d.c.id + "')\" style=\"cursor:pointer\"><td>" + esc(d.c.name) + "</td><td class=\"num red\"><b>" + fmt(d.bal) + "</b></td></tr>";
+    });
+    h += "</table></div>";
+  }
+
+  h += "<div class=\"panel\"><h3>" + t("recentTx") + "</h3>";
+  if (!recent.length) h += "<div class=\"muted\">" + t("noData") + "</div>";
+  else {
+    h += "<table><tr><th>" + t("date") + "</th><th>" + t("name") + "</th><th>" + t("type") + "</th><th class=\"num\">" + t("amount") + "</th></tr>";
+    recent.forEach(function(x){
+      var c = custById(x.custId);
+      var cls = x.type === "Due" ? "red" : "green";
+      var sign = x.type === "Due" ? "+" : "−";
+      h += "<tr><td>" + esc(x.date) + "</td><td>" + esc(c ? c.name : "?") + "</td><td>" + t(x.type === "Due" ? "due" : "payment") + "</td><td class=\"num " + cls + "\">" + sign + fmt(x.amount) + "</td></tr>";
+    });
+    h += "</table>";
+  }
+  h += "</div>";
+  return h;
+}
+
+function card(lbl, val, cls){
+  return "<div class=\"card\"><div class=\"lbl\">" + lbl + "</div><div class=\"val " + cls + "\">" + val + "</div></div>";
+}
+
+function viewCustomers(){
+  var q = state.search.trim().toLowerCase();
+  var list = state.data.customers.filter(function(c){
+    return !q || c.name.toLowerCase().indexOf(q) >= 0 || String(c.phone).indexOf(q) >= 0;
+  });
+  list.sort(function(a,b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+  var h = "<div class=\"searchbar\"><input id=\"searchBox\" placeholder=\"" + t("search") + "…\" value=\"" + esc(state.search) + "\" oninput=\"state.search=this.value;render();document.getElementById('searchBox').focus()\">"
+    + "<button class=\"btn\" onclick=\"customerForm(null)\">" + t("addCustomer") + "</button></div>";
+  if (!list.length) return h + "<div class=\"panel muted\">" + t("noResults") + "</div>";
+  list.forEach(function(c){
+    var b = balanceOf(c.id);
+    var ov = overdueInfo(c);
+    h += "<div class=\"custrow\" onclick=\"openDetail('" + c.id + "')\">"
+      + "<div><div class=\"nm\">" + esc(c.name) + (ov ? " <span class=\"badge\">" + ov.days + " " + t("overdueDays") + "</span>" : "") + "</div>"
+      + "<div class=\"ph\">" + esc(c.phone) + "</div></div>"
+      + "<div style=\"text-align:right;font-weight:700\" class=\"" + (b > 0 ? "red" : (b < 0 ? "green" : "")) + "\">" + fmt(b) + "</div></div>";
+  });
+  return h;
+}
+
+function openDetail(id){ state.selCust = String(id); go("detail"); }
+
+function viewDetail(){
+  var c = custById(state.selCust);
+  if (!c) { go("customers"); return ""; }
+  var bal = balanceOf(c.id);
+  var ov = overdueInfo(c);
+  var h = "<button class=\"rowbtn\" onclick=\"go('customers')\">" + t("back") + "</button>"
+    + "<div class=\"panel\">"
+    + "<div style=\"display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px\"><div>"
+    + "<h2 style=\"color:var(--pd)\">" + esc(c.name) + "</h2>"
+    + "<div class=\"kv muted\">" + esc(c.phone) + (c.phone && c.address ? " • " : "") + esc(c.address) + "</div>"
+    + (c.note ? "<div class=\"kv muted\">" + esc(c.note) + "</div>" : "")
+    + "</div>"
+    + "<div style=\"text-align:right\"><div class=\"muted\" style=\"font-size:13px\">" + t("balance") + (ov ? " <span class=\"badge\">" + ov.days + " " + t("overdueDays") + "</span>" : "") + "</div>"
+    + "<div style=\"font-size:26px;font-weight:700\" class=\"" + (bal > 0 ? "red" : (bal < 0 ? "green" : "")) + "\">" + fmt(bal) + "</div></div></div>"
+    + "<div class=\"btnrow\">"
+    + "<button class=\"btn\" onclick=\"entryForm('" + c.id + "','Due')\">" + t("addDue") + "</button>"
+    + "<button class=\"btn sec\" onclick=\"entryForm('" + c.id + "','Payment')\">" + t("addPayment") + "</button>"
+    + "<button class=\"btn sec\" onclick=\"printStatement('" + c.id + "')\">" + t("statement") + " 🖨</button>"
+    + "<button class=\"btn sec\" onclick=\"customerForm('" + c.id + "')\">" + t("edit") + "</button>"
+    + "</div></div>";
+
+  var txs = txSorted(c.id);
+  h += "<div class=\"panel\"><h3>" + t("ledger") + "</h3>";
+  if (!txs.length && !(Number(c.opening))) h += "<div class=\"muted\">" + t("noData") + "</div>";
+  else {
+    var run = Number(c.opening) || 0;
+    h += "<table><tr><th>" + t("date") + "</th><th>" + t("type") + "</th><th class=\"num\">" + t("due") + "</th><th class=\"num\">" + t("payment") + "</th><th class=\"num\">" + t("running") + "</th><th></th></tr>";
+    if (run) h += "<tr class=\"muted\"><td></td><td>" + t("openingBal") + "</td><td></td><td></td><td class=\"num\">" + fmt(run) + "</td><td></td></tr>";
+    txs.forEach(function(x){
+      var due = x.type === "Due" ? Number(x.amount) : 0;
+      var pay = x.type === "Payment" ? Number(x.amount) : 0;
+      run += due - pay;
+      h += "<tr><td>" + esc(x.date) + "</td><td>" + t(x.type === "Due" ? "due" : "payment") + (x.note ? "<div class=\"muted\" style=\"font-size:12px\">" + esc(x.note) + "</div>" : "") + "</td>"
+        + "<td class=\"num red\">" + (due ? fmt(due) : "") + "</td>"
+        + "<td class=\"num green\">" + (pay ? fmt(pay) : "") + "</td>"
+        + "<td class=\"num\" style=\"font-weight:600\">" + fmt(run) + "</td>"
+        + "<td class=\"num\"><button class=\"rowbtn\" onclick=\"openReceipt('" + x.id + "')\">🧾</button> <button class=\"rowbtn\" onclick=\"deleteTx('" + x.id + "')\">✕</button></td></tr>";
+    });
+    h += "</table>";
+  }
+  h += "</div>";
+  return h;
+}
+
+function viewEntry(){
+  var cs = state.data.customers.slice().sort(function(a,b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+  var h = "<div class=\"panel\"><h3>" + t("newEntry") + "</h3>"
+    + "<label>" + t("selectCustomer") + "</label><select id=\"eCust\"><option value=\"\">—</option>"
+    + cs.map(function(c){ return "<option value=\"" + c.id + "\">" + esc(c.name) + (c.phone ? " (" + esc(c.phone) + ")" : "") + "</option>"; }).join("") + "</select>"
+    + "<label>" + t("type") + "</label><select id=\"eType\"><option value=\"Due\">" + t("due") + "</option><option value=\"Payment\">" + t("payment") + "</option></select>"
+    + "<label>" + t("amount") + "</label><input id=\"eAmount\" type=\"number\" inputmode=\"decimal\" step=\"any\" min=\"0\">"
+    + "<label>" + t("date") + "</label><input id=\"eDate\" type=\"date\" value=\"" + today() + "\">"
+    + "<label>" + t("note") + "</label><input id=\"eNote\" placeholder=\"" + t("note") + "\">"
+    + "<div class=\"btnrow\"><button class=\"btn\" onclick=\"saveEntry()\">" + t("save") + "</button></div>"
+    + "<p class=\"muted\" style=\"margin-top:10px;font-size:13px\">Tip: " + t("addCustomer") + " → " + t("customers") + "</p>"
+    + "</div>";
+  return h;
+}
+
+function viewReports(){
+  var m = thisMonth();
+  var h = "<div class=\"panel\"><h3>" + t("monthSummary") + "</h3>"
+    + "<label>" + t("reportMonth") + "</label><input type=\"month\" id=\"rMonth\" value=\"" + m + "\" onchange=\"renderReportsMonth()\">"
+    + "<div id=\"rOut\"></div></div>"
+    + "<div class=\"panel\"><h3>" + t("allCustomers") + "</h3><div id=\"rAll\"></div></div>";
+  return h;
+}
+
+function renderReportsMonth(){
+  var m = (document.getElementById("rMonth") || {}).value || thisMonth();
+  var dues = 0, pays = 0, rows = {};
+  state.data.transactions.forEach(function(x){
+    if (x.date.slice(0,7) !== m) return;
+    if (x.type === "Due") dues += Number(x.amount); else pays += Number(x.amount);
+    rows[x.custId] = rows[x.custId] || {d:0,p:0};
+    if (x.type === "Due") rows[x.custId].d += Number(x.amount); else rows[x.custId].p += Number(x.amount);
+  });
+  var h = "<div class=\"cards\">"
+    + card(t("duesTotal"), fmt(dues), "red")
+    + card(t("paymentsTotal"), fmt(pays), "green")
+    + card(t("net"), fmt(dues - pays), "")
+    + "</div><table style=\"margin-top:10px\"><tr><th>" + t("name") + "</th><th class=\"num\">" + t("due") + "</th><th class=\"num\">" + t("payment") + "</th></tr>";
+  var ids = Object.keys(rows);
+  if (!ids.length) h += "<tr><td colspan=\"3\" class=\"muted\">" + t("noData") + "</td></tr>";
+  ids.forEach(function(id){
+    var c = custById(id);
+    h += "<tr onclick=\"openDetail('" + id + "')\" style=\"cursor:pointer\"><td>" + esc(c ? c.name : "?") + "</td><td class=\"num red\">" + fmt(rows[id].d) + "</td><td class=\"num green\">" + fmt(rows[id].p) + "</td></tr>";
+  });
+  h += "</table>";
+  document.getElementById("rOut").innerHTML = h;
+
+  var all = [];
+  state.data.customers.forEach(function(c){ var b = balanceOf(c.id); if (b > 0) all.push({c:c, bal:b}); });
+  all.sort(function(a,b){ return b.bal - a.bal; });
+  var ah = "<table><tr><th>" + t("name") + "</th><th class=\"num\">" + t("balance") + "</th></tr>";
+  if (!all.length) ah += "<tr><td colspan=\"2\" class=\"muted\">" + t("noData") + "</td></tr>";
+  all.forEach(function(a){ ah += "<tr onclick=\"openDetail('" + a.c.id + "')\" style=\"cursor:pointer\"><td>" + esc(a.c.name) + "</td><td class=\"num red\">" + fmt(a.bal) + "</td></tr>"; });
+  ah += "</table>";
+  document.getElementById("rAll").innerHTML = ah;
+}
+
+function viewSettings(){
+  var s = settings();
+  var h = "<div class=\"panel\"><h3>" + t("settings") + "</h3>"
+    + "<label>" + t("businessName") + "</label><input id=\"sName\" value=\"" + esc(s.businessName) + "\">"
+    + "<label>" + t("businessPhone") + "</label><input id=\"sPhone\" value=\"" + esc(s.businessPhone) + "\">"
+    + "<label>" + t("businessAddress") + "</label><input id=\"sAddress\" value=\"" + esc(s.businessAddress) + "\">"
+    + "<label>" + t("alertDays") + "</label><input id=\"sAlert\" type=\"number\" min=\"0\" value=\"" + esc(s.alertDays) + "\">"
+    + "<label>" + t("language") + "</label><select id=\"sLang\"><option value=\"en\"" + (s.language === "en" ? " selected" : "") + ">English</option><option value=\"bn\"" + (s.language === "bn" ? " selected" : "") + ">বাংলা</option></select>"
+    + "<div class=\"btnrow\"><button class=\"btn\" onclick=\"saveSettingsUi()\">" + t("save") + "</button></div>"
+    + "</div>"
+    + "<div class=\"panel\"><h3>" + t("connection") + "</h3>"
+    + "<div class=\"kv\"><b>" + t("status") + "</b>" + (getApiUrl() ? "<span class=\"green\">" + t("connected") + "</span>" : "<span class=\"red\">" + t("notConnected") + "</span>") + "</div>"
+    + "<div class=\"btnrow\"><button class=\"btn sec\" onclick=\"state.view='setup';render()\">" + t("changeConnection") + "</button></div>"
+    + "</div>";
+  return h;
+}
+
+/* ============ ACTIONS ============ */
+
+function saveSettingsUi(){
+  api("saveSettings", {
+    businessName: document.getElementById("sName").value,
+    businessPhone: document.getElementById("sPhone").value,
+    businessAddress: document.getElementById("sAddress").value,
+    alertDays: document.getElementById("sAlert").value,
+    language: document.getElementById("sLang").value
+  }).then(function(){ toast(t("settingsSaved")); loadData(); }).catch(function(e){ alert(e.message); });
+}
+
+function customerForm(id){
+  var c = id ? custById(id) : null;
+  openModal("<h2>" + (c ? t("editCustomer") : t("addCustomer")) + "</h2>"
+    + "<label>" + t("name") + " *</label><input id=\"cName\" value=\"" + esc(c ? c.name : "") + "\">"
+    + "<label>" + t("phone") + "</label><input id=\"cPhone\" value=\"" + esc(c ? c.phone : "") + "\">"
+    + "<label>" + t("address") + "</label><input id=\"cAddress\" value=\"" + esc(c ? c.address : "") + "\">"
+    + "<label>" + t("openingBalance") + "</label><input id=\"cOpen\" type=\"number\" step=\"any\" value=\"" + (c ? c.opening : 0) + "\">"
+    + "<label>" + t("note") + "</label><input id=\"cNote\" value=\"" + esc(c ? c.note : "") + "\">"
+    + "<div class=\"btnrow\">"
+    + "<button class=\"btn\" onclick=\"saveCustomerUi('" + (c ? c.id : "") + "')\">" + t("save") + "</button>"
+    + (c ? "<button class=\"btn danger\" onclick=\"deleteCustomerUi('" + c.id + "')\">" + t("del") + "</button>" : "")
+    + "<button class=\"btn sec\" onclick=\"closeModal()\">" + t("cancel") + "</button>"
+    + "</div>");
+}
+
+function saveCustomerUi(id){
+  api("saveCustomer", {
+    id: id,
+    name: document.getElementById("cName").value,
+    phone: document.getElementById("cPhone").value,
+    address: document.getElementById("cAddress").value,
+    opening: document.getElementById("cOpen").value,
+    note: document.getElementById("cNote").value
+  }).then(function(){
+    closeModal(); toast(t("saved"));
+    return loadData();
+  }).catch(function(e){ alert(e.message); });
+}
+
+function deleteCustomerUi(id){
+  if (!confirm(t("confirmCust"))) return;
+  api("deleteCustomer", id).then(function(){
+    closeModal(); toast(t("deleted"));
+    if (state.selCust === id) { state.selCust = null; state.view = "customers"; }
+    loadData();
+  }).catch(function(e){ alert(e.message); });
+}
+
+function entryForm(custId, type){
+  var cs = state.data.customers.slice().sort(function(a,b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+  openModal("<h2>" + (type === "Due" ? t("addDue") : t("addPayment")) + "</h2>"
+    + "<label>" + t("selectCustomer") + "</label><select id=\"mCust\">"
+    + cs.map(function(c){ return "<option value=\"" + c.id + "\"" + (c.id === String(custId) ? " selected" : "") + ">" + esc(c.name) + "</option>"; }).join("") + "</select>"
+    + "<label>" + t("amount") + "</label><input id=\"mAmount\" type=\"number\" inputmode=\"decimal\" step=\"any\" min=\"0\">"
+    + "<label>" + t("date") + "</label><input id=\"mDate\" type=\"date\" value=\"" + today() + "\">"
+    + "<label>" + t("note") + "</label><input id=\"mNote\">"
+    + "<div class=\"btnrow\"><button class=\"btn\" onclick=\"saveModalEntry('" + type + "')\">" + t("save") + "</button>"
+    + "<button class=\"btn sec\" onclick=\"closeModal()\">" + t("cancel") + "</button></div>");
+  setTimeout(function(){ document.getElementById("mAmount").focus(); }, 80);
+}
+
+function saveEntry(){
+  var tx = {
+    custId: document.getElementById("eCust").value,
+    type: document.getElementById("eType").value,
+    amount: document.getElementById("eAmount").value,
+    date: document.getElementById("eDate").value,
+    note: document.getElementById("eNote").value
+  };
+  api("saveTransaction", tx).then(function(saved){
+    toast(t("saved"));
+    return loadData().then(function(){ render(); openReceipt(saved.id); });
+  }).catch(function(e){ alert(e.message); });
+}
+
+function saveModalEntry(type){
+  var tx = {
+    custId: document.getElementById("mCust").value,
+    type: type,
+    amount: document.getElementById("mAmount").value,
+    date: document.getElementById("mDate").value,
+    note: document.getElementById("mNote").value
+  };
+  api("saveTransaction", tx).then(function(saved){
+    closeModal(); toast(t("saved"));
+    return loadData().then(function(){
+      if (state.view === "entry") render();
+      openReceipt(saved.id);
+    });
+  }).catch(function(e){ alert(e.message); });
+}
+
+function deleteTx(id){
+  if (!confirm(t("confirmTx"))) return;
+  api("deleteTransaction", id).then(function(){ toast(t("deleted")); loadData(); }).catch(function(e){ alert(e.message); });
+}
+
+/* ============ RECEIPTS & PRINTING ============ */
+
+function receiptHtml(tx, c){
+  var balAfter = balanceAfterTx(tx);
+  var s = settings();
+  return "<div class=\"receipt\">"
+    + "<h2>" + esc(s.businessName || "Nur Traders") + "</h2>"
+    + "<div class=\"meta\">" + esc(s.businessAddress) + (s.businessPhone ? " • " + esc(s.businessPhone) : "") + "</div>"
+    + "<div class=\"line\"><span>" + t("receipt") + " #</span><span>" + esc(tx.id) + "</span></div>"
+    + "<div class=\"line\"><span>" + t("date") + "</span><span>" + esc(tx.date) + "</span></div>"
+    + "<div class=\"line\"><span>" + t("name") + "</span><span>" + esc(c ? c.name : "?") + "</span></div>"
+    + (c && c.phone ? "<div class=\"line\"><span>" + t("phone") + "</span><span>" + esc(c.phone) + "</span></div>" : "")
+    + "<div class=\"line\"><span>" + t("type") + "</span><span>" + t(tx.type === "Due" ? "due" : "payment") + "</span></div>"
+    + (tx.note ? "<div class=\"line\"><span>" + t("note") + "</span><span>" + esc(tx.note) + "</span></div>" : "")
+    + "<div class=\"line total\"><span>" + t("amount") + "</span><span>" + fmt(tx.amount) + "</span></div>"
+    + "<div class=\"line\"><span>" + t("balanceAfter") + "</span><span>" + fmt(balAfter) + "</span></div>"
+    + "<div class=\"thanks\">" + t("thanks") + "</div>"
+    + "</div>";
+}
+
+function balanceAfterTx(tx){
+  var c = custById(tx.custId);
+  var run = c ? (Number(c.opening) || 0) : 0;
+  var arr = txSorted(tx.custId);
+  for (var i = 0; i < arr.length; i++) {
+    run += arr[i].type === "Due" ? Number(arr[i].amount) : -Number(arr[i].amount);
+    if (arr[i].id === tx.id) break;
+  }
+  return run;
+}
+
+function openReceipt(txId){
+  var tx = state.data.transactions.filter(function(x){ return x.id === String(txId); })[0];
+  if (!tx) return;
+  var c = custById(tx.custId);
+  openModal("<h2>" + t("receipt") + "</h2>" + receiptHtml(tx, c)
+    + "<div class=\"btnrow\"><button class=\"btn\" onclick=\"printHtml('receipt-zone')\">🖨 " + t("print") + "</button>"
+    + "<button class=\"btn sec\" onclick=\"closeModal()\">" + t("close") + "</button></div>");
+  var zone = document.createElement("div");
+  zone.id = "receipt-zone";
+  zone.innerHTML = receiptHtml(tx, c);
+  document.getElementById("modal").appendChild(zone);
+  zone.style.display = "none";
+}
+
+function statementHtml(cid){
+  var c = custById(cid);
+  var txs = txSorted(cid);
+  var run = Number(c.opening) || 0;
+  var s = settings();
+  var h = "<div class=\"receipt\" style=\"max-width:420px\">"
+    + "<h2>" + esc(s.businessName || "Nur Traders") + "</h2>"
+    + "<div class=\"meta\">" + t("statementOf") + ": <b>" + esc(c.name) + "</b>"
+    + (c.phone ? " • " + esc(c.phone) : "") + "</div>"
+    + "<table><tr><th>" + t("date") + "</th><th>" + t("type") + "</th><th class=\"num\">" + t("amount") + "</th><th class=\"num\">" + t("running") + "</th></tr>";
+  if (run) h += "<tr><td colspan=\"3\" class=\"muted\">" + t("openingBal") + "</td><td class=\"num\">" + fmt(run) + "</td></tr>";
+  txs.forEach(function(x){
+    run += x.type === "Due" ? Number(x.amount) : -Number(x.amount);
+    h += "<tr><td>" + esc(x.date) + "</td><td>" + t(x.type === "Due" ? "due" : "payment") + "</td>"
+      + "<td class=\"num " + (x.type === "Due" ? "red" : "green") + "\">" + (x.type === "Due" ? "+" : "−") + fmt(x.amount) + "</td>"
+      + "<td class=\"num\">" + fmt(run) + "</td></tr>";
+  });
+  h += "<tr><td colspan=\"3\"><b>" + t("closingBal") + "</b></td><td class=\"num\"><b>" + fmt(run) + "</b></td></tr>";
+  h += "</table><div class=\"thanks\">" + t("thanks") + "</div></div>";
+  return h;
+}
+
+function printStatement(cid){
+  openModal("<h2>" + t("statement") + "</h2>" + statementHtml(cid)
+    + "<div class=\"btnrow\"><button class=\"btn\" onclick=\"printHtml('stmt-zone')\">🖨 " + t("print") + "</button>"
+    + "<button class=\"btn sec\" onclick=\"closeModal()\">" + t("close") + "</button></div>");
+  var zone = document.createElement("div");
+  zone.id = "stmt-zone";
+  zone.innerHTML = statementHtml(cid);
+  zone.style.display = "none";
+  document.getElementById("modal").appendChild(zone);
+}
+
+function printHtml(zoneId){
+  var zone = document.getElementById(zoneId);
+  if (!zone) return;
+  document.getElementById("printArea").innerHTML = zone.innerHTML;
+  window.print();
+}
+
+/* ============ MODAL ============ */
+
+function openModal(html){
+  document.getElementById("modal").innerHTML = html;
+  document.getElementById("modalWrap").classList.add("open");
+}
+function closeModal(){
+  document.getElementById("modalWrap").classList.remove("open");
+  document.getElementById("modal").innerHTML = "";
+}
+
+/* ============ START ============ */
+loadData();
+</script>
+</body>
+</html>
